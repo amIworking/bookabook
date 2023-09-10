@@ -15,3 +15,14 @@ class BookView(viewsets.ViewSet):
     def list(self, request, *args, **kwargs):
         books = self.serializer_class(self.queryset, many=True)
         return Response(books.data)
+    
+    def add_book(self, request, *args, **kwargs):
+        pass
+    def show_book(self, request, *args, **kwargs):
+        pass
+
+    def edit_book(self, request, *args, **kwargs):
+        pass
+
+    def delete_book(self, request, *args, **kwargs):
+        pass
