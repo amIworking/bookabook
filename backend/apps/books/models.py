@@ -1,9 +1,20 @@
 import datetime
 
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
-YEAR_CHOICES = [(r,r) for r in reversed(range(1000, datetime.date.today().year+1))]
+#YEAR_CHOICES = [(r,r) for r in reversed(range(1000, datetime.date.today().year+1))]
+def validate_year(value):
+    if value > datetime.date.today().year+1:
+        raise ValidationError(_(
+            '%(value)s can not be bigger'
+            'than current year'))
+    elif value < 0:
+        raise ValidationError(_(
+            '%(value)s has to be greater'
+            'or equal than 0 year'))
 
 class Genre(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название категории', unique=True)
@@ -20,8 +31,8 @@ class Genre(models.Model):
 class Author(models.Model):
      first_name = models.CharField(max_length=100, verbose_name='Имя автора')
      last_name = models.CharField(max_length=100, verbose_name='Фамилия автора')
-     birth_year = models.IntegerField(('birth_year'), choices=YEAR_CHOICES, blank=True)
-     death_year = models.IntegerField(('death_year'), choices=YEAR_CHOICES, blank=True)
+     birth_year = models.PositiveIntegerField(validators=[validate_year], blank=True)
+     death_year = models.PositiveIntegerField(validators=[validate_year], blank=True)
      country = models.CharField(max_length=255, verbose_name='Страна рождения', blank=True)
      slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name='slug')
 
@@ -38,8 +49,8 @@ class Book(models.Model):
     description = models.CharField(max_length=1000, verbose_name='Описание', blank=True)
     authors = models.ManyToManyField(Author,)
     genres = models.ManyToManyField(Genre, blank=True)
-    publish_year = models.IntegerField(('year'), choices=YEAR_CHOICES,
-                                       default=datetime.datetime.now().year,)
+    publish_year = models.PositiveIntegerField(validators=[validate_year],
+                                       default=str(datetime.datetime.now().year),)
     country = models.CharField(max_length=255, verbose_name='Страна публикации', blank=True)
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name='slug')
 

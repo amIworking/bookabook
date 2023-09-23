@@ -35,7 +35,7 @@ v1_router.register(r'books', BookView, basename='books')
 
 
 schema_view = get_schema_view(
-    openapi.Info(title="Buyme API", default_version="v1", description="Routes of bookabook project"),
+    openapi.Info(title="Book a book API", default_version="v1", description="Routes of bookabook project"),
     public=False,
     permission_classes=(permissions.AllowAny,),
 )
