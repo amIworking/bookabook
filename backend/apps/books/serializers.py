@@ -9,6 +9,10 @@ class BookSerializerBase(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = ('__all__')
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
 
 class ShowBook(serializers.Serializer):
     slug = serializers.CharField(help_text="book's slug")
@@ -28,40 +32,31 @@ class ShowBook(serializers.Serializer):
 
 
 class ShowBooksByYear(serializers.Serializer):
-    publish_year = serializers.IntegerField(help_text="books' year publication")
+    publish_year = serializers.IntegerField(min_value=0,
+                    max_value=datetime.date.today().year+1,
+                    help_text="books' year publication")
 
-    def __init__(self, *args, **kwargs):
-        self.publish_year = None
-        super().__init__(*args, **kwargs)
+    def save(self, **kwargs):
+        publish_year = self.validated_data['publish_year']
+        books = (Book.objects
+                 .prefetch_related('authors', 'genres')
+                 .filter(publish_year=publish_year))
+        return books
 
-    def validate_year(self, value):
-        self.publish_year = value
-        if not (0 < value < datetime.date.today().year+1):
-            error_message = ("can not be bigger"
-            "than current year and can not be less"
-             "than 0")
-            raise serializers.ValidationError(error_message)
-        return self.publish_year
 
 
 class ShowBooksByYears(serializers.Serializer):
-    year1 = serializers.IntegerField(
-        help_text="start books' year publication")
-    year2 = serializers.IntegerField(
-        help_text="end books' year publication")
+    year1 = serializers.IntegerField(min_value=0,
+            max_value=datetime.date.today().year+1,
+            help_text="start books' year publication")
+    year2 = serializers.IntegerField(min_value=0,
+            max_value=datetime.date.today().year+1,
+            help_text="end books' year publication")
 
-    def __init__(self, *args, **kwargs):
-        self.year1, self.year2 = None, None
-        super().__init__(*args, **kwargs)
-
-    def validate_years(self, value):
-        try:
-            years = value.split('-')
-            self.year1, self.year2 = int(years[0]), int(years[1])
-        except Exception as e:
-            error_message = f"Something went wrong: {str(e)}"
-            raise serializers.ValidationError(error_message)
-
-
-
-        return value
+    def save(self, **kwargs):
+        year1 = self.validated_data['year1']
+        year2 = self.validated_data['year2']
+        books = (Book.objects
+                 .prefetch_related('authors', 'genres')
+                 .filter(publish_year__range=(year1, year2)))
+        return books
