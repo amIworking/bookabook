@@ -21,18 +21,12 @@ class BookView(viewsets.ViewSet):
         return Response(books_sl.data)
 
     def retrieve(self, request, slug, *args, **kwargs):
-        books = (self.queryset)
-        books_sl = self.serializer_class(books, many=True)
+        serializer = ShowBook(data={'slug': slug})
+        serializer.is_valid(raise_exception=True)
+        book = serializer.save()
+        books_sl = self.serializer_class(book)
         return Response(books_sl.data)
 
-    @action(methods=['get'], detail=False, serializer_class=ShowBook)
-    def show_book(self, request, *args, **kwargs):
-        pre_book = self.serializer_class(data=request.data)
-        pre_book.is_valid(raise_exception=True)
-        book = (self.queryset
-                 .get(**pre_book.validated_data))
-        book_sl = BookSerializerBase(book)
-        return Response(book_sl.data)
     @action(methods=['get'], detail=False, serializer_class=ShowBooksByYear)
     def show_books_by_year(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
@@ -49,9 +43,13 @@ class BookView(viewsets.ViewSet):
         books_sl = BookSerializerBase(instance=books, many=True)
         return Response(books_sl.data)
 
-    @action(methods=['post'], detail=False)
+    @action(methods=['post'], detail=False, serializer_class = ChangeBookSerializer)
     def add_book(self, request, *args, **kwargs):
-        pass
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid()
+        book = serializer.save()
+        book_sl = self.serializer_class(instance=book)
+        return Response(book_sl.data)
 
     def edit_book(self, request, *args, **kwargs):
         pass
