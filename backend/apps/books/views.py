@@ -43,17 +43,26 @@ class BookView(viewsets.ViewSet):
         books_sl = BookSerializerBase(instance=books, many=True)
         return Response(books_sl.data)
 
-    @action(methods=['post'], detail=False, serializer_class = ChangeBookSerializer)
+    @action(methods=['post'], detail=False, serializer_class = AddBookSerializer)
     def add_book(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         book = serializer.save()
         book_sl = self.serializer_class(instance=book)
         return Response(book_sl.data)
 
+    @action(methods=['patch'], detail=False, serializer_class=EditBookSerializer)
     def edit_book(self, request, *args, **kwargs):
-        pass
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        book = serializer.save()
+        book_sl = self.serializer_class(instance=book)
+        return Response(book_sl.data)
 
+    @action(methods=['delete'], detail=False, serializer_class=DeleteBookSerializer)
     def delete_book(self, request, *args, **kwargs):
-        pass
+        print(request.data)
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            return Response({'book':'a book with given id was deleted successfully'})
 
