@@ -27,7 +27,7 @@ class BookView(viewsets.ViewSet):
         books_sl = self.serializer_class(book)
         return Response(books_sl.data)
 
-    @action(methods=['get'], detail=False, serializer_class=ShowBooksByYear)
+    @action(methods=['put'], detail=False, serializer_class=ShowBooksByYear)
     def show_books_by_year(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -35,7 +35,7 @@ class BookView(viewsets.ViewSet):
         books_sl = BookSerializerBase(instance=books, many=True)
         return Response(books_sl.data)
 
-    @action(methods=['get'], detail=False, serializer_class=ShowBooksByYears)
+    @action(methods=['put'], detail=False, serializer_class=ShowBooksByYears)
     def show_books_by_years(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)

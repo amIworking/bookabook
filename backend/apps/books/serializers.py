@@ -25,6 +25,7 @@ class BookSerializerBase(serializers.ModelSerializer):
     publish_year = serializers.IntegerField(validators=[validate_year],
                    default=str(datetime.datetime.now().year))
     country = serializers.CharField(max_length=255, required=False)
+    description = serializers.CharField(max_length=1000, required=False)
 
     class Meta:
         model = Book

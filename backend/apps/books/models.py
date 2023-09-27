@@ -31,9 +31,9 @@ class Genre(models.Model):
 class Author(models.Model):
      first_name = models.CharField(max_length=100, verbose_name='Имя автора')
      last_name = models.CharField(max_length=100, verbose_name='Фамилия автора')
-     birth_year = models.PositiveIntegerField(validators=[validate_year], blank=True)
-     death_year = models.PositiveIntegerField(validators=[validate_year], blank=True)
-     country = models.CharField(max_length=255, verbose_name='Страна рождения', blank=True)
+     birth_year = models.PositiveIntegerField(validators=[validate_year], null=True, blank=True)
+     death_year = models.PositiveIntegerField(validators=[validate_year], null=True, blank=True)
+     country = models.CharField(max_length=255, verbose_name='Страна рождения', null=True, blank=True)
      slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name='slug')
 
      class Meta:
