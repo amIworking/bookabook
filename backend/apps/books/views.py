@@ -27,16 +27,16 @@ class BookView(viewsets.ViewSet):
         books_sl = self.serializer_class(book)
         return Response(books_sl.data)
 
-    @action(methods=['put'], detail=False, serializer_class=ShowBooksByYear)
-    def show_books_by_year(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
+    @action(methods=['patch'], detail=False, serializer_class=ShowBooksByYear)
+    def by_year(self, request, year=None, *args, **kwargs):
+        serializer = ShowBooksByYear(data=request.data)
         serializer.is_valid(raise_exception=True)
         books = serializer.save()
         books_sl = BookSerializerBase(instance=books, many=True)
         return Response(books_sl.data)
 
-    @action(methods=['put'], detail=False, serializer_class=ShowBooksByYears)
-    def show_books_by_years(self, request, *args, **kwargs):
+    @action(methods=['patch'], detail=False, serializer_class=ShowBooksByYears)
+    def between_years(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         books = serializer.save()
@@ -61,8 +61,26 @@ class BookView(viewsets.ViewSet):
 
     @action(methods=['delete'], detail=False, serializer_class=DeleteBookSerializer)
     def delete_book(self, request, *args, **kwargs):
-        print(request.data)
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
             return Response({'book':'a book with given id was deleted successfully'})
+
+    @action(methods=['post'], detail=False, serializer_class=AddBookAuthorSerializer)
+    def add_book_author(self, request, *args, **kwargs):
+        print(request.data)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        book = serializer.save()
+        book_sl = BookSerializerBase(book)
+        return Response(book_sl.data)
+
+    @action(methods=['delete'], detail=False, serializer_class=DeleteBookAuthorSerializer)
+    def delete_book_author(self, request, *args, **kwargs):
+        print(request.data)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        book = serializer.save()
+        book_sl = BookSerializerBase(book)
+        return Response(book_sl.data)
 

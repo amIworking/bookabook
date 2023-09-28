@@ -97,7 +97,6 @@ class AddBookSerializer(BookSerializerBase):
 
 
     def save(self, **kwargs):
-        print(self.validated_data)
         book = Book.objects.create(**self.validated_data)
         book.save()
         return book
@@ -109,7 +108,6 @@ class EditBookSerializer(BookSerializerBase):
                 .prefetch_related('authors', 'genres'))
 
     def validate_id(self, value):
-        print(value)
         book = (self.queryset
                 .filter(pk=value)
                 .first())
@@ -134,7 +132,6 @@ class EditBookSerializer(BookSerializerBase):
         return value
 
     def validate(self, attrs):
-        print(attrs)
         return attrs
     def save(self, **kwargs):
         pk = self.validated_data['id']
@@ -153,3 +150,49 @@ class DeleteBookSerializer(EditBookSerializer):
             raise serializers.ValidationError(error_message)
         book.delete()
         return True
+
+class BookToTableBase(serializers.Serializer):
+    book_id = serializers.IntegerField()
+    author_id = serializers.IntegerField(required=False)
+    queryset = (Book.objects.all()
+                .prefetch_related('authors', 'genres'))
+    def validate_book_id(self, value):
+        book = (self.queryset
+                .filter(pk=value)
+                .first())
+        if not book:
+            error_message = "Book with given id doesn't exist"
+            raise serializers.ValidationError(error_message)
+        return value
+
+
+class BookAuthorBase(BookToTableBase):
+    author_id = serializers.IntegerField()
+    def validate_author_id(self, value):
+        author = (Author.objects.all()
+                  .filter(pk=value)
+                  .first())
+        if not author:
+            error_message = "Author with given id doesn't exist"
+            raise serializers.ValidationError(error_message)
+        return value
+
+
+
+class AddBookAuthorSerializer(BookAuthorBase):
+    def save(self, **kwargs):
+        book = self.queryset.get(pk=self.validated_data["book_id"])
+        author = Author.objects.get(pk=self.validated_data["author_id"])
+        print(book.authors.all())
+        if author in book.authors.all():
+            error_message = "Author with given id already exists in given book"
+            raise serializers.ValidationError(error_message)
+        book.authors.add(author)
+        return book
+
+class DeleteBookAuthorSerializer(BookAuthorBase):
+    def save(self, **kwargs):
+        book = self.queryset.get(pk=self.validated_data["book_id"])
+        author = Author.objects.get(pk=self.validated_data["author_id"])
+        book.authors.remove(author)
+        return book

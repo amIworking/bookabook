@@ -74,26 +74,26 @@ class CRUDBookTestCase(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(Book.objects.all().count(), book_count)
 
-    def test_show_books_by_year(self):
-        url = reverse('books-show-books-by-year')
+    def test_books_by_year(self):
+        url = reverse('books-by-year')
         books = [Book.objects.create(**book) for book in BOOKS]
         books = (Book.objects
                  .prefetch_related('authors', 'genres')
                  .filter(publish_year=BOOKS[0]['publish_year']))
         data = {"publish_year": BOOKS[0]['publish_year']}
-        response = self.client.put(url, data=data)
+        response = self.client.patch(url, data=data)
         expected_data = BookSerializerBase(books, many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(expected_data, response.data)
 
-    def test_show_books_by_years(self):
-        url = reverse('books-show-books-by-years')
+    def test_books_between_years(self):
+        url = reverse('books-between-years')
         books = [Book.objects.create(**book) for book in BOOKS]
         books = (Book.objects
                  .prefetch_related('authors', 'genres')
                  .filter(publish_year__range=(1000, 2000)))
         data = {"year1": 1000, "year2": 2000}
-        response = self.client.put(url, data=data)
+        response = self.client.patch(url, data=data)
         expected_data = BookSerializerBase(books, many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(expected_data, response.data)
