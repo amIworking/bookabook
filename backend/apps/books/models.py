@@ -3,6 +3,7 @@ import datetime
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from apps.users.models import User
 
 # Create your models here.
 #YEAR_CHOICES = [(r,r) for r in reversed(range(1000, datetime.date.today().year+1))]
@@ -20,6 +21,7 @@ class Genre(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название категории', unique=True)
     description = models.CharField(max_length=1000, verbose_name='Описание', blank=True)
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name='slug')
+    user = models.ForeignKey(User, verbose_name="Юзер", on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Жанр'
@@ -35,6 +37,7 @@ class Author(models.Model):
      death_year = models.PositiveIntegerField(validators=[validate_year], null=True, blank=True)
      country = models.CharField(max_length=255, verbose_name='Страна рождения', null=True, blank=True)
      slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name='slug')
+     user = models.ForeignKey(User, verbose_name="Юзер", on_delete=models.CASCADE)
 
      class Meta:
          verbose_name = 'Автор'
@@ -53,6 +56,7 @@ class Book(models.Model):
                                        default=str(datetime.datetime.now().year),)
     country = models.CharField(max_length=255, verbose_name='Страна публикации', blank=True)
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name='slug')
+    user = models.ForeignKey(User, verbose_name="Юзер", on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Книга'

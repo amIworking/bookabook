@@ -26,9 +26,13 @@ from rest_framework import permissions, routers
 #from dj_tracker.urls import urlpatterns as dj_tracker_urls
 
 from apps.books.views import *
+from apps.users.views import UserView
 
 v1_router = routers.SimpleRouter()
 v1_router.register(r'books', BookView, basename='books')
+v1_router.register(r'authors', AuthorView, basename='authors')
+v1_router.register(r'genres', GenreView, basename='genre')
+v1_router.register(r'users', UserView, basename='user')
 #v1_router.register(r'shop', ShopView, basename='shop')
 #v1_router.register(r'basket', BasketView, basename='basket')
 
@@ -37,7 +41,7 @@ v1_router.register(r'books', BookView, basename='books')
 schema_view = get_schema_view(
     openapi.Info(title="Book a book API", default_version="v1", description="Routes of bookabook project"),
     public=False,
-    permission_classes=(permissions.AllowAny,),
+    permission_classes=(permissions.IsAdminUser,),
 )
 
 v1_api = [

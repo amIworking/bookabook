@@ -5,14 +5,13 @@ from rest_framework.test import APITestCase
 from apps.books.models import *
 from apps.books.serializers import *
 
-from apps.books.tests.DATA import AUTHORS, GENRES, BOOKS  # All data which test cases use
+from apps.books.tests.DATA import BOOKS, SetUP  # All data which test cases use
 
 
 class CRUDBookTestCase(APITestCase):
 
     def test_list_books(self):
-        authors = (Author.objects.create(**author) for author in AUTHORS)
-        genres = (Genre.objects.create(**genre) for genre in GENRES)
+        authors, genres = SetUP.authors, SetUP.genres
         books = []
         for book_info in BOOKS:
             book = Book.objects.create(**book_info)
@@ -27,8 +26,7 @@ class CRUDBookTestCase(APITestCase):
         self.assertEqual(serializer, response.data)
 
     def test_detail_books(self):
-        authors = (Author.objects.create(**author) for author in AUTHORS)
-        genres = (Genre.objects.create(**genre) for genre in GENRES)
+        authors, genres = SetUP.authors, SetUP.genres
         books = []
         for book_info in BOOKS:
             book = Book.objects.create(**book_info)
@@ -76,7 +74,7 @@ class CRUDBookTestCase(APITestCase):
 
     def test_books_by_year(self):
         url = reverse('books-by-year')
-        books = [Book.objects.create(**book) for book in BOOKS]
+        books = SetUP.books
         books = (Book.objects
                  .prefetch_related('authors', 'genres')
                  .filter(publish_year=BOOKS[0]['publish_year']))
@@ -88,7 +86,7 @@ class CRUDBookTestCase(APITestCase):
 
     def test_books_between_years(self):
         url = reverse('books-between-years')
-        books = [Book.objects.create(**book) for book in BOOKS]
+        books = SetUP.books
         books = (Book.objects
                  .prefetch_related('authors', 'genres')
                  .filter(publish_year__range=(1000, 2000)))

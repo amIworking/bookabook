@@ -4,7 +4,6 @@ from typing import List
 from apps.books.models import Book, Author, Genre, validate_year
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import ValidationError
 
 
 class AuthorSerializerBase(serializers.ModelSerializer):
@@ -32,7 +31,7 @@ class BookSerializerBase(serializers.ModelSerializer):
         fields = ('__all__')
 
 
-class ShowBook(serializers.Serializer):
+class ShowBookSerializer(serializers.Serializer):
     slug = serializers.CharField(help_text="book's slug")
     queryset = (Book.objects.all()
                 .prefetch_related('authors', 'genres'))
@@ -196,3 +195,176 @@ class DeleteBookAuthorSerializer(BookAuthorBase):
         author = Author.objects.get(pk=self.validated_data["author_id"])
         book.authors.remove(author)
         return book
+
+class BookGenreBase(BookToTableBase):
+    genre_id = serializers.IntegerField()
+    def validate_genre_id(self, value):
+        genre = (Genre.objects.all()
+                  .filter(pk=value)
+                  .first())
+        if not genre:
+            error_message = "Genre with given id doesn't exist"
+            raise serializers.ValidationError(error_message)
+        return value
+
+
+
+class AddBookGenreSerializer(BookGenreBase):
+    def save(self, **kwargs):
+        book = self.queryset.get(pk=self.validated_data["book_id"])
+        genre = Genre.objects.get(pk=self.validated_data["genre_id"])
+        if genre in book.authors.all():
+            error_message = "Genre with given id already exists in given book"
+            raise serializers.ValidationError(error_message)
+        book.genres.add(genre)
+        return book
+
+class DeleteBookGenreSerializer(BookGenreBase):
+    def save(self, **kwargs):
+        book = self.queryset.get(pk=self.validated_data["book_id"])
+        genre = Genre.objects.get(pk=self.validated_data["genre_id"])
+        book.genres.remove(genre)
+        return book
+
+class ShowAuthorSerializer(serializers.Serializer):
+    slug = serializers.CharField(help_text="authors's slug")
+
+    def validate_slug(self, value):
+        author = Author.objects.filter(slug=value).first()
+        if not author:
+            error_message = "This author doesn't exist"
+            raise serializers.ValidationError(error_message)
+        return value
+
+    def save(self):
+        return Author.objects.get(slug=self.validated_data['slug'])
+
+class AddAuthorSerializer(AuthorSerializerBase):
+    def validate_slug(self, value):
+        author = Author.objects.filter(slug=value).first()
+        if author:
+            error_message = "An author with given slug already exits"
+            raise serializers.ValidationError(error_message)
+
+        return value
+
+
+    def save(self, **kwargs):
+        author = Author.objects.create(**self.validated_data)
+        author.save()
+        return author
+
+
+class EditAuthorSerializer(AuthorSerializerBase):
+    id = serializers.IntegerField()
+    queryset = Author.objects.all()
+
+    def validate_id(self, value):
+        author = (self.queryset.filter(pk=value).first())
+        if not author:
+            error_message = "An author with given id doesn't exist"
+            raise serializers.ValidationError(error_message)
+        self.id = value
+
+        return value
+
+
+    def validate_slug(self, value):
+        pk = self.id
+        pre_author = self.queryset.get(pk=pk)
+        if pre_author.slug != value:
+            author = (self.queryset
+                    .filter(slug=value)
+                    .first())
+            if author:
+                error_message = "An author with given slug already exits"
+                raise serializers.ValidationError(error_message)
+        return value
+
+    def validate(self, attrs):
+        return attrs
+    def save(self, **kwargs):
+        pk = self.validated_data['id']
+        self.queryset.filter(pk=pk).update(**self.validated_data)
+        return self.queryset.get(pk=pk)
+
+class DeleteAuthorSerializer(EditAuthorSerializer):
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        author = Author.objects.get(pk=attrs['id'])
+        if author.slug != attrs['slug']:
+            error_message = "An author should be equal to an author's instance"
+            raise serializers.ValidationError(error_message)
+        author.delete()
+        return True
+
+
+class ShowGenreSerializer(serializers.Serializer):
+    slug = serializers.CharField(help_text="genre's slug")
+
+    def validate_slug(self, value):
+        genre = Genre.objects.filter(slug=value).first()
+        if not genre:
+            error_message = "This genre doesn't exist"
+            raise serializers.ValidationError(error_message)
+        return value
+
+    def save(self):
+        return Genre.objects.get(slug=self.validated_data['slug'])
+
+
+class AddGenreSerializer(GenreSerializerBase):
+    def validate_slug(self, value):
+        genre = Genre.objects.filter(slug=value).first()
+        if genre:
+            error_message = "A genre with given slug already exits"
+            raise serializers.ValidationError(error_message)
+
+        return value
+
+    def save(self, **kwargs):
+        genre = Genre.objects.create(**self.validated_data)
+        genre.save()
+        return genre
+
+
+class EditGenreSerializer(GenreSerializerBase):
+    id = serializers.IntegerField()
+    queryset = Genre.objects.all()
+
+    def validate_id(self, value):
+        genre = (self.queryset.filter(pk=value).first())
+        if not genre:
+            error_message = "A genre with given id doesn't exist"
+            raise serializers.ValidationError(error_message)
+        self.id = value
+
+        return value
+
+    def validate_slug(self, value):
+        pk = self.id
+        pre_genre = self.queryset.get(pk=pk)
+        if pre_genre.slug != value:
+            genre = (self.queryset
+                      .filter(slug=value)
+                      .first())
+            if genre:
+                error_message = "A genre with given slug already exits"
+                raise serializers.ValidationError(error_message)
+        return value
+
+    def save(self, **kwargs):
+        pk = self.validated_data['id']
+        self.queryset.filter(pk=pk).update(**self.validated_data)
+        return self.queryset.get(pk=pk)
+
+
+class DeleteGenreSerializer(EditAuthorSerializer):
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        genre = Genre.objects.get(pk=attrs['id'])
+        if genre.slug != attrs['slug']:
+            error_message = "A genre should be equal to an genre instance"
+            raise serializers.ValidationError(error_message)
+        genre.delete()
+        return True

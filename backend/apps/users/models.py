@@ -3,7 +3,7 @@ from django.db import models
 
 # Create your models here.
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None):
+    def create_user(self, email, password=None, *args, **kwargs):
         """
         Creates and saves a User with the given email, date of
         birth and password.
@@ -33,8 +33,15 @@ class UserManager(BaseUserManager):
         return user
 
 class User(AbstractBaseUser):
-    email = models.EmailField(unique=True)
-    phone = models.CharField(verbose_name='Номер телефона', max_length=20, blank=True)
+    email = models.EmailField(unique=True, max_length=255)
+    phone = models.CharField(verbose_name='Номер телефона',
+                    max_length=20, blank=True, null=True, default=None)
+    first_name = models.CharField(verbose_name="Имя",
+                       max_length=255, blank=True, null=True, default=None)
+    last_name = models.CharField(verbose_name="Фамилия",
+                       max_length=255, blank=True, null=True, default=None)
+    country = models.CharField(verbose_name="Страна проживания",
+                     max_length=255, blank=True, null=True, default=None)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
