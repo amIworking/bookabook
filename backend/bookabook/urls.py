@@ -32,7 +32,7 @@ v1_router = routers.SimpleRouter()
 v1_router.register(r'books', BookView, basename='books')
 v1_router.register(r'authors', AuthorView, basename='authors')
 v1_router.register(r'genres', GenreView, basename='genre')
-v1_router.register(r'users', UserView, basename='user')
+v1_router.register(r'users', UserView, basename='users')
 #v1_router.register(r'shop', ShopView, basename='shop')
 #v1_router.register(r'basket', BasketView, basename='basket')
 
