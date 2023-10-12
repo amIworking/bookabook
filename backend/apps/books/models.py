@@ -21,7 +21,6 @@ class Genre(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название категории', unique=True)
     description = models.CharField(max_length=1000, verbose_name='Описание', blank=True)
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name='slug')
-    user = models.ForeignKey(User, verbose_name="Юзер", on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Жанр'
@@ -37,7 +36,6 @@ class Author(models.Model):
      death_year = models.PositiveIntegerField(validators=[validate_year], null=True, blank=True)
      country = models.CharField(max_length=255, verbose_name='Страна рождения', null=True, blank=True)
      slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name='slug')
-     user = models.ForeignKey(User, verbose_name="Юзер", on_delete=models.CASCADE)
 
      class Meta:
          verbose_name = 'Автор'
@@ -50,13 +48,13 @@ class Author(models.Model):
 class Book(models.Model):
     name = models.CharField(max_length=200, verbose_name='Название книги')
     description = models.CharField(max_length=1000, verbose_name='Описание', blank=True)
+    pages = models.PositiveIntegerField(default=100)
     authors = models.ManyToManyField(Author,)
     genres = models.ManyToManyField(Genre, blank=True)
     publish_year = models.PositiveIntegerField(validators=[validate_year],
                                        default=str(datetime.datetime.now().year),)
     country = models.CharField(max_length=255, verbose_name='Страна публикации', blank=True)
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name='slug')
-    user = models.ForeignKey(User, verbose_name="Юзер", on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Книга'
