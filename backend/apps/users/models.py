@@ -1,7 +1,6 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 from django.db import models
 
-# Create your models here.
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, *args, **kwargs):
         """
@@ -34,14 +33,14 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     email = models.EmailField(unique=True, max_length=255)
-    phone = models.CharField(verbose_name='Номер телефона',
-                    max_length=20, blank=True, null=True, default=None)
-    first_name = models.CharField(verbose_name="Имя",
-                       max_length=255, blank=True, null=True, default=None)
-    last_name = models.CharField(verbose_name="Фамилия",
-                       max_length=255, blank=True, null=True, default=None)
-    country = models.CharField(verbose_name="Страна проживания",
-                     max_length=255, blank=True, null=True, default=None)
+    phone = models.CharField(
+        verbose_name='Phone number',
+        max_length=20, null=True)
+    first_name = models.CharField(max_length=255, null=True)
+    last_name = models.CharField(max_length=255, null=True)
+    country = models.CharField(
+            verbose_name="Country of Residence",
+            max_length=255, null=True)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
@@ -51,7 +50,17 @@ class User(AbstractBaseUser):
     REQUIRED_FIELDS = []
 
     def __str__(self):
+        user_info = self.first_name if self.first_name else ""
+        user_info += f" {self.last_name}" if self.last_name else ""
+        if user_info:
+            return user_info
         return self.email
+
+    @property
+    def is_staff(self):
+        "Is the user a member of staff?"
+        # Simplest possible answer: All admins are staff
+        return self.is_admin
 
     def has_perm(self, perm, obj=None):
         "Does the user have a specific permission?"
@@ -62,9 +71,3 @@ class User(AbstractBaseUser):
         "Does the user have permissions to view the app `app_label`?"
         # Simplest possible answer: Yes, always
         return True
-
-    @property
-    def is_staff(self):
-        "Is the user a member of staff?"
-        # Simplest possible answer: All admins are staff
-        return self.is_admin
