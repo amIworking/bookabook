@@ -25,6 +25,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     #path('', include("apps.books.urls")),
     path('api/v1/books/book_list', bookViews.BookAPIView.as_view()),
+    path('api/v1/books/book_list/<int:pk>', bookViews.BookAPIView.as_view()),
 ]
 
 handler404 = page_not_found

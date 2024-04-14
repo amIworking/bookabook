@@ -16,6 +16,7 @@ class BookModel:
 
 class BookSerializer(serializers.Serializer):
 
+
     GENRES = [('fiction', 'fiction'),
               ('novel', 'novel'),
               ('narrative', 'narrative'),
@@ -39,9 +40,19 @@ class BookSerializer(serializers.Serializer):
     is_published = serializers.BooleanField(default=True)
     slug = serializers.SlugField()
 
-    def create(self, validated_data):
 
-        return Book.objects.create(**validated_data)
+    def slug_existing(self):
+        if Book.objects.filter(slug=self.slug).exists():
+            return None
+
+
+    def create(self, validated_data):
+        try:
+            book = Book.objects.create(**validated_data)
+            return book
+        except Exception as e:
+            return str(e)
+
 
     def update(self, instance, validated_data):
 
@@ -52,6 +63,8 @@ class BookSerializer(serializers.Serializer):
         instance.writing_date = validated_data.get('writing_date', instance.writing_date)
         instance.is_published = validated_data.get('is_published', instance.is_published)
         instance.slug = validated_data.get('slug', instance.slug)
+        instance.save()
+        return instance
 
 
 def encode():

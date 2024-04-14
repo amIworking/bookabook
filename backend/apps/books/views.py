@@ -21,10 +21,35 @@ class BookAPIView(APIView):
         return Response({'posts': BookSerializer(queryset, many=True).data})
 
     def post(self, request):
-        new_book_sr = BookSerializer(data=request.data)
-        new_book_sr.is_valid(raise_exception=True)
-        new_book_sr.save()
-        return Response({"post": new_book_sr.validated_data})
+        serializer = BookSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        book_sr = serializer.save()
+        if isinstance(book_sr, str):
+            return Response({"error": book_sr})
+        return Response({"post": book_sr.validated_data}, status=201)
+
+    def put(self, request, *args, **kwargs):
+        pk = kwargs.get('pk', None)
+        if not pk:
+            return Response({"error": "Method PUT is not allowed"})
+        try:
+            book = Book.objects.get(pk=pk)
+        except:
+            return Response({"error": "A book with given id doesn't exist"})
+        serializer = BookSerializer(instance=book, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"put": serializer.data})
+
+    def delete(self, request, *args, **kwargs):
+        pk = kwargs.get('pk', None)
+        if not pk:
+            return Response({"error": "Method DELETE is not allowed"})
+        try:
+            book = Book.objects.get(pk=pk)
+        except:
+            return Response({"error": "A book with given id doesn't exist"})
+        book.delete()
 
 
 def index(request):
