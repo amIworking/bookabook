@@ -2,7 +2,7 @@
 URL configuration for bookabook project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
+    https://docs.djangoproject.com/en/5.0/topics/http/urls/
 Examples:
 Function views
     1. Add an import:  from my_app import views
@@ -15,51 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.template.defaulttags import url
 from django.urls import path, include
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
-from django.conf import settings
-from django.conf.urls.static import static
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
-from rest_framework import permissions, routers
-#from dj_tracker.urls import urlpatterns as dj_tracker_urls
 
-from apps.books.views import *
-from apps.users.views import UserView
-
-v1_router = routers.SimpleRouter()
-v1_router.register(r'books', BookView, basename='books')
-v1_router.register(r'authors', AuthorView, basename='authors')
-v1_router.register(r'genres', GenreView, basename='genre')
-v1_router.register(r'users', UserView, basename='user')
-#v1_router.register(r'shop', ShopView, basename='shop')
-#v1_router.register(r'basket', BasketView, basename='basket')
-
-
-
-schema_view = get_schema_view(
-    openapi.Info(title="Book a book API", default_version="v1", description="Routes of bookabook project"),
-    public=False,
-    permission_classes=(permissions.IsAdminUser,),
-)
-
-v1_api = [
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    path('', include(v1_router.urls)),
-    path("swagger(<str:format>.json|.yaml)/", schema_view.without_ui(), name="schema-json"),
-    path("swagger/", schema_view.with_ui("swagger"), name="schema-swagger-ui"),
-    path("docs/", schema_view.with_ui("redoc"), name="schema-redoc"),
-]
-
+from apps.books.views import page_not_found
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/', include(v1_api)),
+    path('', include("apps.books.urls")),
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    #urlpatterns += [path("dj-tracker/", include(dj_tracker_urls)),]
-    urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
+
+handler404 = page_not_found
