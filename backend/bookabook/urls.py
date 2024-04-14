@@ -18,10 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 
 from apps.books.views import page_not_found
+from apps.books import views as bookViews
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include("apps.books.urls")),
+    path('api-auth/', include('rest_framework.urls')),
+    #path('', include("apps.books.urls")),
+    path('api/v1/books/book_list', bookViews.BookAPIView.as_view()),
 ]
 
 handler404 = page_not_found
