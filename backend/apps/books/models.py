@@ -76,8 +76,8 @@ class Book(models.Model):
 
 class BookReview(models.Model):
 
-    book = models.ForeignKey(Book, on_delete=models.DO_NOTHING)
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     text_review = models.TextField(max_length=2000, null=True)
     rating_review = models.IntegerField(
         validators=[MinValueValidator(1),MaxValueValidator(5)])
