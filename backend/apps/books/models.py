@@ -60,9 +60,10 @@ class Book(models.Model):
     slug = models.SlugField(
             max_length=255, unique=True, db_index=True,
             verbose_name='slug')
+    reviews = models.ManyToManyField('BookReview')
     rating = models.FloatField(
         validators=[MinValueValidator(1.0), MaxValueValidator(5.0)],
-        default=0.0
+        default=0.0, editable=False
     )
 
     def __str__(self):
@@ -76,8 +77,8 @@ class Book(models.Model):
 
 class BookReview(models.Model):
 
-    book = models.ForeignKey(Book, on_delete=models.DO_NOTHING)
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    #book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     text_review = models.TextField(max_length=2000, null=True)
     rating_review = models.IntegerField(
         validators=[MinValueValidator(1),MaxValueValidator(5)])
