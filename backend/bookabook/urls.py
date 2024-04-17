@@ -16,16 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
 
-from apps.books.views import page_not_found
 from apps.books import views as bookViews
+
+router = routers.SimpleRouter()
+router.register(r'books', bookViews.BookViewSet, basename='books')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
-    #path('', include("apps.books.urls")),
-    path('api/v1/books/book_list', bookViews.BookAPIList.as_view()),
-    path('api/v1/books/book_list/<int:pk>', bookViews.BookAPIRetrieve.as_view()),
+    path('api/v1/', include(router.urls)),
+
 ]
 
-handler404 = page_not_found
+

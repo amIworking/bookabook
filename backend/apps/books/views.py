@@ -7,20 +7,19 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Author, Book
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, viewsets
 from django.db import connection
 from .serializers import BookSerializer
 
-
 @permission_classes((permissions.AllowAny,))
-class BookAPIList(generics.ListCreateAPIView):
+class BookViewSet(viewsets.ModelViewSet):
     queryset = (Book.objects.all()
                     .select_related('author'))
     serializer_class = BookSerializer
+    lookup_field = 'slug'
 
-@permission_classes((permissions.AllowAny,))
-class BookAPIRetrieve(generics.RetrieveUpdateDestroyAPIView):
-    queryset = (Book.objects.all()
-                    .select_related('author'))
+class BookViewsViewSet(viewsets.ModelViewSet):
     serializer_class = BookSerializer
+    lookup_field = 'slug'
 
+    #def get_queryset(self):
