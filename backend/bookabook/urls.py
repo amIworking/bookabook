@@ -25,8 +25,10 @@ from bookabook import settings
 router = routers.SimpleRouter()
 router.register(r'books', bookViews.BookShowView, basename='books')
 router.register(r'book_change', bookViews.BookChangeView, basename='book_change')
-router.register(r'book_review', bookViews.BookReviewView, basename='book_review')
-
+router.register(r'book_review', bookViews.BookReviewShowCreateView,
+                basename='book_review')
+router.register(r'book_review_change', bookViews.BookReviewChangeView,
+                basename='book_review_change')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
