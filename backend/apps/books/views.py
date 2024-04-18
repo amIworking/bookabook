@@ -25,6 +25,13 @@ class BookShowView(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'slug'
     permission_class = (permissions.AllowAny)
 
+    def retrieve(self, request, *args, **kwargs):
+        response = super().retrieve(request, *args, **kwargs)
+        reviews_queryset = BookReview.objects.filter(book_id=response.data['pk'])
+        reviews_sr = BookReviewSerializerBase(instance=reviews_queryset, many=True)
+        response.data['reviews'] = reviews_sr.data
+        return response
+
 
 
 class BookChangeView(mixins.CreateModelMixin,
@@ -32,17 +39,12 @@ class BookChangeView(mixins.CreateModelMixin,
                    mixins.DestroyModelMixin,
                    viewsets.GenericViewSet):
     queryset = (Book.objects.all()
-                .select_related('author'))
+                    .select_related('author'))
     serializer_class = BookChangeSerializer
     lookup_field = 'slug'
     permission_classes = (permissions.IsAdminUser,)
 
-    def retrieve(self, request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
-        reviews_queryset = BookReview.objects.filter(book_id=response.data['pk'])
-        reviews_sr = BookReviewSerializerBase(instance=reviews_queryset, many=True)
-        response.data['reviews'] = reviews_sr.data
-        return response
+
 
 
 
@@ -53,7 +55,7 @@ class BookReviewShowCreateView(mixins.ListModelMixin,
                             mixins.CreateModelMixin,
                             viewsets.GenericViewSet):
     queryset = (BookReview.objects.all()
-                .select_related('user', 'book'))
+                          .select_related('user', 'book'))
     serializer_class = BookReviewSerializerBase
     permission_class = (permissions.IsAuthenticated,)
 
@@ -62,5 +64,5 @@ class BookReviewChangeView(mixins.UpdateModelMixin,
                             viewsets.ReadOnlyModelViewSet,):
     permission_classes = (IsOwnerOrAdminUser,)
     queryset = (BookReview.objects.all()
-                .select_related('user', 'book'))
+                          .select_related('user', 'book'))
     serializer_class = BookReviewChangeSerializer
