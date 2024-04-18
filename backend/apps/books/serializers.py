@@ -18,14 +18,6 @@ class AuthorSerializerBase(serializers.ModelSerializer):
         model = Author
         #fields = ('__all__')
         fields= ('pk', 'first_name', 'last_name')
-class BookReviewSerializerBase(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(slug_field='email', read_only=True)
-    book = serializers.SlugRelatedField(slug_field='title', read_only=True)
-    rating_review = serializers.FloatField(read_only=True)
-    class Meta:
-        model = BookReview
-        #fields = ('__all__')
-        fields= ('pk', 'text_review', 'user', 'book', 'rating_review')
 
 
 class BookSerializerBase(serializers.ModelSerializer):
@@ -38,6 +30,20 @@ class BookChangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields= ('pk', 'title', 'slug', 'author', 'rating')
+
+class BookReviewSerializerBase(serializers.ModelSerializer):
+    rating_review = serializers.IntegerField(max_value=5, min_value=1)
+    class Meta:
+        model = BookReview
+        #fields = ('__all__')
+        fields= ('pk', 'text_review', 'user', 'book', 'rating_review')
+
+class BookReviewChangeSerializer(BookReviewSerializerBase):
+    pass
+
+
+
+
 
 
 

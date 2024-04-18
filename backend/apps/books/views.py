@@ -12,7 +12,7 @@ from rest_framework import generics, permissions, viewsets, status, mixins
 from django.db import connection
 
 from .serializers import (BookSerializerBase, BookChangeSerializer,
-                          BookReviewSerializerBase)
+                          BookReviewSerializerBase, BookReviewChangeSerializer)
 from django_print_sql import print_sql, print_sql_decorator
 from .permissions import IsOwnerOrAdminUser, AnyNotAllowed
 
@@ -27,8 +27,7 @@ class BookShowView(viewsets.ReadOnlyModelViewSet):
 
 
 
-class BookChangeView(mixins.RetrieveModelMixin,
-                    mixins.CreateModelMixin,
+class BookChangeView(mixins.CreateModelMixin,
                    mixins.UpdateModelMixin,
                    mixins.DestroyModelMixin,
                    viewsets.GenericViewSet):
@@ -49,9 +48,19 @@ class BookChangeView(mixins.RetrieveModelMixin,
 
 
 
-class BookReviewView(viewsets.ModelViewSet):
+class BookReviewShowCreateView(mixins.ListModelMixin,
+                               mixins.RetrieveModelMixin,
+                            mixins.CreateModelMixin,
+                            viewsets.GenericViewSet):
     queryset = (BookReview.objects.all()
                 .select_related('user', 'book'))
     serializer_class = BookReviewSerializerBase
     permission_class = (permissions.IsAuthenticated,)
 
+class BookReviewChangeView(mixins.UpdateModelMixin,
+                           mixins.DestroyModelMixin,
+                            viewsets.ReadOnlyModelViewSet,):
+    permission_classes = (IsOwnerOrAdminUser,)
+    queryset = (BookReview.objects.all()
+                .select_related('user', 'book'))
+    serializer_class = BookReviewChangeSerializer
