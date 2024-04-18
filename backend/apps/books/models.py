@@ -60,14 +60,14 @@ class Book(models.Model):
     slug = models.SlugField(
             max_length=255, unique=True, db_index=True,
             verbose_name='slug')
-    reviews = models.ManyToManyField('BookReview')
+    #reviews = models.ManyToManyField('BookReview')
     rating = models.FloatField(
         validators=[MinValueValidator(1.0), MaxValueValidator(5.0)],
         default=0.0, editable=False
     )
 
     def __str__(self):
-        return f"{self.title}"
+        return self.title
 
     class Meta:
         ordering = ['title']
@@ -77,7 +77,7 @@ class Book(models.Model):
 
 class BookReview(models.Model):
 
-    #book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     text_review = models.TextField(max_length=2000, null=True)
     rating_review = models.IntegerField(
@@ -96,8 +96,9 @@ class BookReview(models.Model):
         all_ratings = [r.rating_review
                        for r in BookReview.objects
                        .filter(book=self.book)]
-        self.book.rating = round(sum(all_ratings) / len(all_ratings), 1)
-        self.book.save()
+        if all_ratings:
+            self.book.rating = round(sum(all_ratings) / len(all_ratings), 1)
+            self.book.save()
         super().save(*args, **kwargs)
 
     def __str__(self):

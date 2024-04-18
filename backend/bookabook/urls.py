@@ -14,14 +14,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
 from apps.books import views as bookViews
+from bookabook import settings
 
 router = routers.SimpleRouter()
-router.register(r'books', bookViews.BookViewSet, basename='books')
+router.register(r'books', bookViews.BookShowView, basename='books')
+router.register(r'book_change', bookViews.BookChangeView, basename='book_change')
+router.register(r'book_review', bookViews.BookReviewView, basename='book_review')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,3 +35,5 @@ urlpatterns = [
 ]
 
 
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
