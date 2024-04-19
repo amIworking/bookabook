@@ -20,16 +20,6 @@ class AuthorSerializerBase(serializers.ModelSerializer):
         fields= ('pk', 'first_name', 'last_name')
 
 
-class BookSerializerBase(serializers.ModelSerializer):
-    author = AuthorSerializerBase(read_only=True)
-    class Meta:
-        model = Book
-        fields= ('pk', 'title', 'slug', 'author', 'rating')
-
-class BookChangeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Book
-        fields= ('pk', 'title', 'slug', 'author', 'rating')
 
 class BookReviewSerializerBase(serializers.ModelSerializer):
     rating_review = serializers.IntegerField(max_value=5, min_value=1)
@@ -42,8 +32,16 @@ class BookReviewChangeSerializer(BookReviewSerializerBase):
     pass
 
 
+class BookSerializerBase(serializers.ModelSerializer):
+    author = AuthorSerializerBase(read_only=True)
+    class Meta:
+        model = Book
+        fields= ('pk', 'title', 'slug', 'author', 'rating')
 
-
+class BookChangeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields= ('pk', 'title', 'slug', 'author', 'rating')
 
 
 

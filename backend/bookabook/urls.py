@@ -19,18 +19,36 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
-from apps.books import views as bookViews
+from apps.books import views as BookViews
+from apps.users import views as UserViews
 from bookabook import settings
 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
+
+
+
 router = routers.SimpleRouter()
-router.register(r'books', bookViews.BookShowView, basename='books')
-router.register(r'book_change', bookViews.BookChangeView, basename='book_change')
-router.register(r'book_review', bookViews.BookReviewShowCreateView,
+router.register(r'books', BookViews.BookShowView, basename='books')
+router.register(r'book_change', BookViews.BookChangeView, basename='book_change')
+router.register(r'book_review', BookViews.BookReviewShowCreateView,
                 basename='book_review')
-router.register(r'book_review_change', bookViews.BookReviewChangeView,
+router.register(r'book_review_change', BookViews.BookReviewChangeView,
                 basename='book_review_change')
+router.register(r'users', UserViews.UserView,
+                basename='users')
+
+
 urlpatterns = [
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+
     path('admin/', admin.site.urls),
+
     path('api-auth/', include('rest_framework.urls')),
     path('api/v1/', include(router.urls)),
 

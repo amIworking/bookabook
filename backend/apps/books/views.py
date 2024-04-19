@@ -8,11 +8,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Author, Book, BookReview
-from rest_framework import generics, permissions, viewsets, status, mixins
+from rest_framework import (generics, permissions,
+                            viewsets, status, mixins)
 from django.db import connection
 
-from .serializers import (BookSerializerBase, BookChangeSerializer,
-                          BookReviewSerializerBase, BookReviewChangeSerializer)
+from .serializers import (BookSerializerBase,
+                          BookChangeSerializer,
+                          BookReviewSerializerBase,
+                          BookReviewChangeSerializer)
 from django_print_sql import print_sql, print_sql_decorator
 from .permissions import IsOwnerOrAdminUser, AnyNotAllowed
 
