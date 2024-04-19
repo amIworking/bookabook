@@ -33,15 +33,10 @@ class BookReviewChangeSerializer(BookReviewSerializerBase):
 
 
 class BookSerializerBase(serializers.ModelSerializer):
-    author = AuthorSerializerBase(read_only=True)
     class Meta:
         model = Book
         fields= ('pk', 'title', 'slug', 'author', 'rating')
 
-class BookChangeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Book
-        fields= ('pk', 'title', 'slug', 'author', 'rating')
 
 
 

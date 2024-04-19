@@ -1,9 +1,5 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseNotFound
-from django.urls import reverse
-from django.template.loader import render_to_string
+
 from rest_framework.decorators import permission_classes, action
-from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -13,20 +9,25 @@ from rest_framework import (generics, permissions,
 from django.db import connection
 
 from .serializers import (BookSerializerBase,
-                          BookChangeSerializer,
-                          BookReviewSerializerBase,
-                          BookReviewChangeSerializer)
+                          BookReviewSerializerBase)
 from django_print_sql import print_sql, print_sql_decorator
 from .permissions import IsOwnerOrAdminUser, AnyNotAllowed
 
 
 
-class BookShowView(viewsets.ReadOnlyModelViewSet):
+class BookView(viewsets.ModelViewSet):
     queryset = (Book.objects.all()
                     .select_related('author'))
     serializer_class = BookSerializerBase
     lookup_field = 'slug'
-    permission_class = (permissions.AllowAny)
+    permission_classes_dict = \
+        {   'list': (permissions.AllowAny,),
+            'retrieve': (permissions.AllowAny,),
+            'create': (permissions.IsAuthenticated,),
+            'update': (permissions.IsAdminUser,),
+            'partial_update': (permissions.IsAdminUser,),
+            'destroy': (permissions.IsAdminUser,),
+         }
 
     def retrieve(self, request, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)
@@ -35,37 +36,34 @@ class BookShowView(viewsets.ReadOnlyModelViewSet):
         response.data['reviews'] = reviews_sr.data
         return response
 
+    def get_permissions(self):
+        try:
+            permissions = self.permission_classes_dict[self.action]
+        except KeyError:
+            permissions = (AnyNotAllowed,)
+        return (permission() for permission in permissions)
 
 
-class BookChangeView(mixins.CreateModelMixin,
-                   mixins.UpdateModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
-    queryset = (Book.objects.all()
-                    .select_related('author'))
-    serializer_class = BookChangeSerializer
-    lookup_field = 'slug'
-    permission_classes = (permissions.IsAdminUser,)
-
-
-
-
-
-
-
-class BookReviewShowCreateView(mixins.ListModelMixin,
+class BookReviewView(mixins.ListModelMixin,
                                mixins.RetrieveModelMixin,
                             mixins.CreateModelMixin,
                             viewsets.GenericViewSet):
     queryset = (BookReview.objects.all()
                           .select_related('user', 'book'))
     serializer_class = BookReviewSerializerBase
-    permission_class = (permissions.IsAuthenticated,)
+    permission_classes_dict = \
+        {'list': (permissions.AllowAny,),
+         'retrieve': (permissions.IsAdminUser,),
+         'create': (permissions.IsAuthenticated,),
+         'update': (IsOwnerOrAdminUser,),
+         'partial_update': (IsOwnerOrAdminUser,),
+         'destroy': (IsOwnerOrAdminUser,),
+         }
 
-class BookReviewChangeView(mixins.UpdateModelMixin,
-                           mixins.DestroyModelMixin,
-                            viewsets.ReadOnlyModelViewSet,):
-    permission_classes = (IsOwnerOrAdminUser,)
-    queryset = (BookReview.objects.all()
-                          .select_related('user', 'book'))
-    serializer_class = BookReviewChangeSerializer
+    def get_permissions(self):
+        try:
+            permissions = self.permission_classes_dict[self.action]
+        except KeyError:
+            permissions = (AnyNotAllowed,)
+        return (permission() for permission in permissions)
+

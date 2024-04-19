@@ -16,7 +16,8 @@ Including another URLconf
 """
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
+from django.template.defaulttags import url
+from django.urls import path, include, re_path
 from rest_framework import routers
 
 from apps.books import views as BookViews
@@ -32,28 +33,26 @@ from rest_framework_simplejwt.views import (
 
 
 router = routers.SimpleRouter()
-router.register(r'books', BookViews.BookShowView, basename='books')
-router.register(r'book_change', BookViews.BookChangeView, basename='book_change')
-router.register(r'book_review', BookViews.BookReviewShowCreateView,
-                basename='book_review')
-router.register(r'book_review_change', BookViews.BookReviewChangeView,
-                basename='book_review_change')
+router.register(r'books', BookViews.BookView, basename='books')
+router.register(r'book_reviews', BookViews.BookReviewView,
+                basename='book_reviews')
 router.register(r'users', UserViews.UserView,
                 basename='users')
 
 
 urlpatterns = [
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 
-    path('admin/', admin.site.urls),
-
-    path('api-auth/', include('rest_framework.urls')),
     path('api/v1/', include(router.urls)),
 
 ]
 
 
 if settings.DEBUG:
+    additional_paths = [path('admin/', admin.site.urls),
+                        re_path(r'^auth/', include('djoser.urls')),]
+    urlpatterns.extend(additional_paths)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
