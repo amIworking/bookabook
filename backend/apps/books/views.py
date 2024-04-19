@@ -6,11 +6,9 @@ from rest_framework.views import APIView
 from .models import Author, Book, BookReview
 from rest_framework import (generics, permissions,
                             viewsets, status, mixins)
-from django.db import connection
-
 from .serializers import (BookSerializerBase,
                           BookReviewSerializerBase)
-from django_print_sql import print_sql, print_sql_decorator
+
 from .permissions import IsOwnerOrAdminUser, AnyNotAllowed
 
 
@@ -44,10 +42,7 @@ class BookView(viewsets.ModelViewSet):
         return (permission() for permission in permissions)
 
 
-class BookReviewView(mixins.ListModelMixin,
-                               mixins.RetrieveModelMixin,
-                            mixins.CreateModelMixin,
-                            viewsets.GenericViewSet):
+class BookReviewView(viewsets.ModelViewSet):
     queryset = (BookReview.objects.all()
                           .select_related('user', 'book'))
     serializer_class = BookReviewSerializerBase
