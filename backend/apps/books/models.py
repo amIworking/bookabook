@@ -3,7 +3,6 @@ from django.db import models
 from django.urls import reverse
 
 from apps.users.models import User
-#from django.contrib.auth.models import User
 
 
 class Author(models.Model):
@@ -56,15 +55,13 @@ class Book(models.Model):
     writing_date = models.DateTimeField(
             null=True,
             verbose_name="date of a publishing date")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_published = models.BooleanField(default=True)
     slug = models.SlugField(
             max_length=255, unique=True, db_index=True,
             verbose_name='slug')
-    #reviews = models.ManyToManyField('BookReview')
-    rating = models.FloatField(
-        validators=[MinValueValidator(1.0), MaxValueValidator(5.0)],
-        default=0.0, editable=False
-    )
+    rating_sum = models.BigIntegerField()
+    rating_quantity = models.IntegerField()
 
     def __str__(self):
         return self.title
@@ -85,22 +82,9 @@ class BookReview(models.Model):
     time_create = models.DateTimeField(auto_now_add=True)
     time_update = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
-
-        if (BookReview.objects
-                .filter(book=self.book, user=self.user)
-                .exists()):
-            return Exception(
-                "You can't write more than 1 review for a book")
-
-        all_ratings = [r.rating_review
-                       for r in BookReview.objects
-                       .filter(book=self.book)]
-        if all_ratings:
-            self.book.rating = round(sum(all_ratings) / len(all_ratings), 1)
-            self.book.save()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.book} -- {self.user}"
 
+    class Meta:
+        unique_together = ('user', 'book')

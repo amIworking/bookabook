@@ -1,4 +1,4 @@
-
+from django.db import transaction
 from rest_framework.decorators import permission_classes, action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -6,38 +6,47 @@ from rest_framework.views import APIView
 from .models import Author, Book, BookReview
 from rest_framework import (generics, permissions,
                             viewsets, status, mixins)
-from .serializers import (BookSerializerBase,
-                          BookReviewSerializerBase)
+from apps.books.serializers import (BookSerializerBase,
+                                    BookRetrieveSerializer,
+                                    BookCreateSerializer,
+                                    BookChangeSerializer,
+                                    BookReviewSerializerBase,
+                                    BookReviewCreateSerializer,
+                                    BookReviewChangeSerializer,
+                                    BookReviewDestroySerializer)
 
-from .permissions import IsOwnerOrAdminUser, AnyNotAllowed
-
+from apps.books.permissions import IsOwnerOrAdminUser, AnyNotAllowed
 
 
 class BookView(viewsets.ModelViewSet):
     queryset = (Book.objects.all()
                     .select_related('author'))
-    serializer_class = BookSerializerBase
     lookup_field = 'slug'
     permission_classes_dict = \
-        {   'list': (permissions.AllowAny,),
+        {
+            'list': (permissions.AllowAny,),
             'retrieve': (permissions.AllowAny,),
             'create': (permissions.IsAuthenticated,),
-            'update': (permissions.IsAdminUser,),
-            'partial_update': (permissions.IsAdminUser,),
+            'update': (IsOwnerOrAdminUser,),
+            'partial_update': (IsOwnerOrAdminUser,),
             'destroy': (permissions.IsAdminUser,),
-         }
+        }
+    serializer_class_dict = \
+        {
+            'list': BookSerializerBase,
+            'retrieve': BookRetrieveSerializer,
+            'create': BookCreateSerializer,
+            'update': BookChangeSerializer,
+            'partial_update': BookChangeSerializer,
+            'destroy': BookChangeSerializer,
+        }
 
-    def retrieve(self, request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
-        reviews_queryset = BookReview.objects.filter(book_id=response.data['pk'])
-        reviews_sr = BookReviewSerializerBase(instance=reviews_queryset, many=True)
-        response.data['reviews'] = reviews_sr.data
-        return response
+    def get_serializer_class(self):
+        return self.serializer_class_dict.get(self.action)
 
     def get_permissions(self):
-        try:
-            permissions = self.permission_classes_dict[self.action]
-        except KeyError:
+        permissions = self.permission_classes_dict.get(self.action)
+        if not permissions:
             permissions = (AnyNotAllowed,)
         return (permission() for permission in permissions)
 
@@ -45,20 +54,41 @@ class BookView(viewsets.ModelViewSet):
 class BookReviewView(viewsets.ModelViewSet):
     queryset = (BookReview.objects.all()
                           .select_related('user', 'book'))
-    serializer_class = BookReviewSerializerBase
     permission_classes_dict = \
-        {'list': (permissions.AllowAny,),
-         'retrieve': (permissions.IsAdminUser,),
-         'create': (permissions.IsAuthenticated,),
-         'update': (IsOwnerOrAdminUser,),
-         'partial_update': (IsOwnerOrAdminUser,),
-         'destroy': (IsOwnerOrAdminUser,),
+        {
+            'list': (permissions.AllowAny,),
+            'retrieve': (permissions.IsAdminUser,),
+            'create': (permissions.IsAuthenticated,),
+            'update': (IsOwnerOrAdminUser,),
+            'partial_update': (IsOwnerOrAdminUser,),
+            'destroy': (IsOwnerOrAdminUser,),
          }
+    serializer_class_dict = \
+        {
+            'list': BookReviewSerializerBase,
+            'retrieve': BookReviewSerializerBase,
+            'create': BookReviewCreateSerializer,
+            'update': BookReviewChangeSerializer,
+            'partial_update': BookReviewChangeSerializer,
+            'destroy': BookReviewDestroySerializer,
+        }
+
+    def destroy(self, request, *args, **kwargs):
+        with transaction.atomic():
+            book_review = self.get_object()
+            book = Book.objects.select_for_update().get(id=book_review.book_id)
+            book.rating_sum -= book_review.rating_review
+            book.rating_quantity -= 1
+            book.save()
+        return super().destroy(request, *args, **kwargs)
+
+
 
     def get_permissions(self):
-        try:
-            permissions = self.permission_classes_dict[self.action]
-        except KeyError:
+        permissions = self.permission_classes_dict.get(self.action)
+        if not permissions:
             permissions = (AnyNotAllowed,)
         return (permission() for permission in permissions)
 
+    def get_serializer_class(self):
+        return self.serializer_class_dict.get(self.action)

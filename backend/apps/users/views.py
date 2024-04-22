@@ -1,9 +1,10 @@
 from rest_framework import (generics, permissions,
                             viewsets, status, mixins)
 
-from .models import User
-from .serializers import UserSerializerBase, UserCreateSerializer, UserChangeSerializer
-from .permisions import IsOwnerOrAdminUser
+from apps.users.models import User
+from apps.users.serializers import (UserSerializerBase, UserCreateSerializer,
+                               UserChangeSerializer)
+from apps.users.permisions import IsOwnerOrAdminUser
 
 
 class UserView(viewsets.ModelViewSet):
