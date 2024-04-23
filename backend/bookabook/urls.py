@@ -36,6 +36,8 @@ router = routers.SimpleRouter()
 router.register(r'books', BookViews.BookView, basename='books')
 router.register(r'book_reviews', BookViews.BookReviewView,
                 basename='book_reviews')
+router.register(r'authors', BookViews.AuthorView,
+                basename='authors')
 router.register(r'users', UserViews.UserView,
                 basename='users')
 

@@ -1,7 +1,7 @@
 from rest_framework import permissions, status
 from rest_framework.exceptions import APIException
 
-from .models import BookReview
+from apps.books.models import BookReview
 
 
 class IsOwnerOrAdminUser(permissions.BasePermission):

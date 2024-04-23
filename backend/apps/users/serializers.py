@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import User
+from apps.users.models import User, UserManager
 
 
 class UserSerializerBase(serializers.ModelSerializer):
@@ -10,11 +10,19 @@ class UserSerializerBase(serializers.ModelSerializer):
         fields = ['pk', 'email', 'first_name', 'last_name', 'is_staff']
 
 
-
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(UserSerializerBase):
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'password']
+        fields = ['email', 'password', 'first_name', 'last_name']
+
+    def save(self, **kwargs):
+
+        email = self.validated_data['email']
+        password = self.validated_data['password']
+        user = User(email=email)
+        user.set_password(password)
+        user.save()
+        return user
 class UserChangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
