@@ -13,22 +13,31 @@ from django.utils.text import slugify
 class AuthorSerializerBase(serializers.ModelSerializer):
     class Meta:
         model = Author
-        #fields = ('__all__')
-        fields= ('pk', 'first_name', 'last_name')
+        exclude = ('time_create', 'time_update')
 
+class AuthorCreateSerializer(AuthorSerializerBase):
+    class Meta:
+        model = Author
+        exclude = ('time_create', 'time_update')
+
+
+class AuthorChangeSerializer(AuthorSerializerBase):
+    class Meta:
+        model = Author
+        exclude = ('time_create', 'time_update', 'slug')
 
 class BookReviewSerializerBase(serializers.ModelSerializer):
     rating_review = serializers.IntegerField(max_value=5, min_value=1)
 
     class Meta:
         model = BookReview
-        fields= ('pk', 'text_review', 'user', 'book', 'rating_review')
+        fields = ('id', 'text_review', 'user', 'book', 'rating_review')
 
 
 class BookReviewCreateSerializer(BookReviewSerializerBase):
 
     def save(self, **kwargs):
-        with (transaction.atomic()):
+        with transaction.atomic():
             book = (Book.objects.select_for_update()
                                 .get(id=self.validated_data['book'].id))
             data = super().save(**kwargs)
@@ -39,7 +48,8 @@ class BookReviewCreateSerializer(BookReviewSerializerBase):
 
 
 class BookReviewChangeSerializer(BookReviewSerializerBase):
-
+    book = serializers.PrimaryKeyRelatedField(read_only=True)
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     def save(self, **kwargs):
         with transaction.atomic():
             book = Book.objects.select_for_update().get(id=self.instance.book_id)
@@ -51,43 +61,47 @@ class BookReviewChangeSerializer(BookReviewSerializerBase):
             book.save()
         return data
 
-class BookReviewDestroySerializer(BookReviewSerializerBase):
-    pass
-
-
 
 class BookSerializerBase(serializers.ModelSerializer):
+    rating = serializers.SerializerMethodField()
     class Meta:
         model = Book
-        fields = ('pk', 'title', 'slug', 'author')
+        fields = ('id', 'title', 'slug',
+                  'author', 'rating', 'genre')
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance=instance)
-        if instance.rating_sum and instance.rating_quantity > 0:
+    def get_rating(self, instance):
+        if instance.rating_sum > 0 and instance.rating_quantity > 0:
             rating = round(instance.rating_sum / instance.rating_quantity, 1)
         else:
             rating = 0.0
-        data['rating'] = rating
-        return data
+        print(rating)
+        return rating
+
+
 
 
 class BookRetrieveSerializer(BookSerializerBase):
     author = AuthorSerializerBase()
+    reviews = BookReviewSerializerBase(source='bookreview_set', many=True)
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance=instance)
-        reviews_queryset = BookReview.objects.filter(book_id=instance.pk)
-        reviews = BookReviewSerializerBase(instance=reviews_queryset, many=True)
-        data['reviews'] = reviews.data
-        return data
+    class Meta:
+        model = Book
+        fields = ('id', 'title', 'slug',
+                  'genre', 'description',
+                  'author', 'rating',
+                  'reviews')
 
 
 class BookCreateSerializer(BookSerializerBase):
-    pass
+    class Meta:
+        model = Book
+        exclude = ('time_create', 'time_update')
 
 
 class BookChangeSerializer(BookSerializerBase):
-    pass
+    class Meta:
+        model = Book
+        exclude = ('time_create', 'time_update', 'slug')
 
 
 
