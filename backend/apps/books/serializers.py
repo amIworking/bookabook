@@ -48,8 +48,6 @@ class BookReviewCreateSerializer(BookReviewSerializerBase):
 
 
 class BookReviewChangeSerializer(BookReviewSerializerBase):
-    book = serializers.PrimaryKeyRelatedField(read_only=True)
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
     def save(self, **kwargs):
         with transaction.atomic():
             book = Book.objects.select_for_update().get(id=self.instance.book_id)
@@ -60,6 +58,11 @@ class BookReviewChangeSerializer(BookReviewSerializerBase):
             book.rating_sum += new_value
             book.save()
         return data
+
+    class Meta:
+        model = BookReview
+        fields = ('id', 'text_review', 'user', 'book', 'rating_review')
+        read_only_fields = ('id', 'book', 'user')
 
 
 class BookSerializerBase(serializers.ModelSerializer):
@@ -74,7 +77,6 @@ class BookSerializerBase(serializers.ModelSerializer):
             rating = round(instance.rating_sum / instance.rating_quantity, 1)
         else:
             rating = 0.0
-        print(rating)
         return rating
 
 
