@@ -101,9 +101,10 @@ class BookCreateSerializer(BookSerializerBase):
 
 
 class BookChangeSerializer(BookSerializerBase):
+    title = serializers.CharField(required=False)
     class Meta:
         model = Book
-        exclude = ('time_create', 'time_update', 'slug')
+        exclude = ('time_create', 'time_update', 'slug', 'user')
 
 
 
