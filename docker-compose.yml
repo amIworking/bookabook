@@ -2,10 +2,25 @@ services:
   bookabook-backend:
     build:
       context: .
+    restart: always
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/bookabook/backend #FROM main_machine TO docker container
 
     command:
-      sh -c "python3 manage.py runserver 0.0.0.0:8000"
+      sh -c "python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"
+
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15.4-alpine
+    restart: always
+    env_file:
+      - .dockerenv
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+      - ./db/backup:/backup
+    ports:
+      - "5432:5432"
