@@ -9,7 +9,7 @@ services:
       - ./backend:/bookabook/backend #FROM main_machine TO docker container
 
     command:
-      sh -c "python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"
+      sh -c "python3 manage.py runserver 0.0.0.0:8000"
 
     depends_on:
       - db
