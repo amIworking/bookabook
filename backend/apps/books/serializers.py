@@ -95,9 +95,17 @@ class BookRetrieveSerializer(BookSerializerBase):
 
 
 class BookCreateSerializer(BookSerializerBase):
+    slug = serializers.CharField(required=False)
     class Meta:
         model = Book
         exclude = ('time_create', 'time_update')
+
+    def validate(self, data):
+        if not data.get('slug'):
+            data['slug'] = slugify(data['title'])
+        return data
+
+
 
 
 class BookChangeSerializer(BookSerializerBase):

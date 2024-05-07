@@ -11,9 +11,8 @@ class IsOwnerOrAdminUser(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-
         return bool(obj.user == request.user
-                     or request.user == request.user.is_staff)
+                     or request.user.is_staff)
 
 class NotAllowedException(APIException):
     status_code = status.HTTP_403_FORBIDDEN
