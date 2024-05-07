@@ -60,8 +60,8 @@ class Book(models.Model):
     slug = models.SlugField(
             max_length=255, unique=True, db_index=True,
             verbose_name='slug')
-    rating_sum = models.BigIntegerField()
-    rating_quantity = models.IntegerField()
+    rating_sum = models.BigIntegerField(default=0)
+    rating_quantity = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
