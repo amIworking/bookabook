@@ -1,10 +1,11 @@
 from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+
 
 class UserManager(BaseUserManager):
 
-
-    def create_user(self, email, password=None, *args, **kwargs):
+    def create_user(self, email, password=None):
         """
         Creates and saves a User with the given email, date of
         birth and password.
@@ -33,7 +34,9 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-class User(AbstractBaseUser):
+
+class User(AbstractBaseUser, PermissionsMixin):
+
     email = models.EmailField(unique=True, max_length=255)
     phone = models.CharField(
         verbose_name='Phone number',
@@ -60,6 +63,4 @@ class User(AbstractBaseUser):
 
     @property
     def is_staff(self):
-        "Is the user a member of staff?"
-        # Simplest possible answer: All admins are staff
         return self.is_admin

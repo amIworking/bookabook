@@ -15,8 +15,7 @@ class Author(models.Model):
     birth_date = models.DateTimeField(null=True)
     death_date = models.DateTimeField(null=True)
     country = models.CharField(
-            max_length=255, verbose_name='Страна рождения',
-            blank=True)
+            max_length=255, blank=True)
     slug = models.SlugField(
         max_length=255, unique=True, db_index=True,
         verbose_name='slug')
@@ -33,12 +32,12 @@ class Author(models.Model):
 
 class Book(models.Model):
 
-    GENRES = [('fiction','fiction'),
-              ('novel','novel'),
-              ('narrative','narrative'),
-              ('mystery','mystery'),
-              ('rom-novel','romance novel'),
-              ('sci-fict','science fiction'),
+    GENRES = [('fiction', 'fiction'),
+              ('novel', 'novel'),
+              ('narrative', 'narrative'),
+              ('mystery', 'mystery'),
+              ('rom-novel', 'romance novel'),
+              ('sci-fict', 'science fiction'),
               ('thriller', 'thriller'),
               ('hist-fic', 'historical fiction'),
               ('gen-fic', 'genre fiction'),
@@ -70,18 +69,16 @@ class Book(models.Model):
         ordering = ['title']
 
 
-
-
 class BookReview(models.Model):
 
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     text_review = models.TextField(max_length=2000, null=True)
     rating_review = models.IntegerField(
-        validators=[MinValueValidator(1),MaxValueValidator(5)])
+        validators=[MinValueValidator(1),
+                    MaxValueValidator(5)])
     time_create = models.DateTimeField(auto_now_add=True)
     time_update = models.DateTimeField(auto_now=True)
-
 
     def __str__(self):
         return f"{self.book} -- {self.user}"

@@ -15,13 +15,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf.urls.static import static
+
 from django.contrib import admin
+
 from django.template.defaulttags import url
+
 from django.urls import path, include, re_path
+
 from rest_framework import routers
 
 from apps.books import views as BookViews
+
 from apps.users import views as UserViews
+
 from bookabook import settings
 
 from rest_framework_simplejwt.views import (
@@ -41,12 +47,11 @@ router.register(r'authors', BookViews.AuthorView,
 router.register(r'users', UserViews.UserView,
                 basename='users')
 
-
 urlpatterns = [
     path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-
+    re_path(r'^auth/', include('djoser.urls')),
     path('api/v1/', include(router.urls)),
 
 ]
@@ -54,7 +59,7 @@ urlpatterns = [
 
 if settings.DEBUG:
     additional_paths = [path('admin/', admin.site.urls),
-                        re_path(r'^auth/', include('djoser.urls')),]
+                        ]
     urlpatterns.extend(additional_paths)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

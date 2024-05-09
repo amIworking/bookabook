@@ -1,11 +1,7 @@
 from django.db import transaction
-from rest_framework.decorators import permission_classes, action
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .models import Author, Book, BookReview
-from rest_framework import (generics, permissions,
-                            viewsets, status, mixins)
+from rest_framework import (permissions, viewsets,)
 from apps.books.serializers import (BookSerializerBase,
                                     BookRetrieveSerializer,
                                     BookCreateSerializer,
@@ -47,10 +43,10 @@ class BookView(viewsets.ModelViewSet):
         return self.serializer_class_dict.get(self.action)
 
     def get_permissions(self):
-        permissions = self.permission_classes_dict.get(self.action)
-        if not permissions:
-            permissions = (AnyNotAllowed,)
-        return (permission() for permission in permissions)
+        all_permissions = self.permission_classes_dict.get(self.action)
+        if not all_permissions:
+            all_permissions = (AnyNotAllowed,)
+        return (permission() for permission in all_permissions)
 
 
 class BookReviewView(viewsets.ModelViewSet):
@@ -84,13 +80,11 @@ class BookReviewView(viewsets.ModelViewSet):
             book.save()
         return super().destroy(request, *args, **kwargs)
 
-
-
     def get_permissions(self):
-        permissions = self.permission_classes_dict.get(self.action)
-        if not permissions:
-            permissions = (AnyNotAllowed,)
-        return (permission() for permission in permissions)
+        all_permissions = self.permission_classes_dict.get(self.action)
+        if not all_permissions:
+            all_permissions = (AnyNotAllowed,)
+        return (permission() for permission in all_permissions)
 
     def get_serializer_class(self):
         return self.serializer_class_dict.get(self.action)
@@ -122,7 +116,7 @@ class AuthorView(viewsets.ModelViewSet):
         return self.serializer_class_dict.get(self.action)
 
     def get_permissions(self):
-        permissions = self.permission_classes_dict.get(self.action)
-        if not permissions:
-            permissions = (AnyNotAllowed,)
-        return (permission() for permission in permissions)
+        all_permissions = self.permission_classes_dict.get(self.action)
+        if not all_permissions:
+            all_permissions = (AnyNotAllowed,)
+        return (permission() for permission in all_permissions)

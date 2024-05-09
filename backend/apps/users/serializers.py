@@ -3,6 +3,11 @@ from rest_framework import serializers
 from apps.users.models import User, UserManager
 
 
+class UserRegistrationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
 class UserSerializerBase(serializers.ModelSerializer):
     is_staff = serializers.BooleanField(read_only=True)
     class Meta:
@@ -27,3 +32,4 @@ class UserChangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['pk', 'email', 'first_name', 'last_name']
+
