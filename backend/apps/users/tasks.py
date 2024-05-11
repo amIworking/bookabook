@@ -2,25 +2,26 @@ from django.core.cache import cache
 
 from django.core.mail import send_mail
 
+from rest_framework.reverse import reverse
+
 from celery_tasks import app
 
 from apps.users.models import User
 
-from bookabook.settings import SERVER_EMAIL, env
+from bookabook.settings import SERVER_EMAIL, DOMAIN_SITE
 
-import secrets
+from secrets import token_urlsafe
 
 
 def generate_token_urlsafe(length: int = 16):
-    return secrets.token_urlsafe(length)
+    return token_urlsafe(length)
 
 
 @app.task
-def send_verify_email(data):
-    email = data.get('email')
-    domain = env.str('DOMAIN_SITE', '127.0.0.1:8000')
-    uri = 'verify_email'
+def send_verify_email(email):
+    domain = DOMAIN_SITE
     token = generate_token_urlsafe()
+    uri = f'/me/verify_email/{token}/'
     cache.set(token, email, 300)
     message = \
         (
@@ -29,7 +30,7 @@ def send_verify_email(data):
                 process on {domain}.
 
                 Please go to the following page to activate account:
-                http://{domain}/{uri}/{token}/
+                http://{domain}{uri}
 
              """
         )

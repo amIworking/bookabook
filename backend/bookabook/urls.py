@@ -25,9 +25,8 @@ router.register(r'users', UserViews.UserView,
 urlpatterns = [
     re_path(r'^auth/', include('djoser.urls'),),
     re_path(r'^auth/', include('djoser.urls.jwt'),),
-    path(r'verify_email/<str:token>/',
+    path(r'me/verify_email/<str:token>/',
          UserViews.UserView.as_view({'get': 'verify_email'})),
-
     path('api/v1/', include(router.urls)),
 ]
 
