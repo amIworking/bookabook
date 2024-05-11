@@ -164,10 +164,11 @@ REST_FRAMEWORK = {
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
-    'ACTIVATION_URL': '#/activate/{uid}/{token}',
+    'ACTIVATION_URL': 'api/v1/activate/{uid}/{token}',
     'SEND_ACTIVATION_EMAIL': True,
     'SEND_CONFIRMATION_EMAIL': True,
     'SERIALIZERS': {},
+    'Token': False
 }
 
 SIMPLE_JWT = {
@@ -241,6 +242,8 @@ LOGGING = {
     }
 }
 
+DOMAIN_SITE = env.str('DOMAIN_SITE', '127.0.0.1:8000')
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = env.str('EMAIL_HOST', 'email_host')
 EMAIL_PORT = env.int('EMAIL_PORT')
@@ -252,7 +255,6 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 EMAIL_ADMIN = EMAIL_HOST_USER
 
-CELERY_BROKER_URL = env.str('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 
 CACHES = {
     "default": {
@@ -262,3 +264,8 @@ CACHES = {
 }
 
 CELERY_CACHE_BACKEND = 'default'
+CELERY_BROKER_URL = env.str('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'

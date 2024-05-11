@@ -46,17 +46,17 @@ services:
     depends_on:
       - redis
 
-  flower:
-      build:
-        context: .
-      hostname: flower
-      entrypoint: celery
-      command: -A celery_tasks.app flower
-      volumes:
-        - ./backend:/bookabook/backend
-      links:
-        - redis
-      depends_on:
-        - redis
-      ports:
-        - '5555:5555'
+#  flower:
+#      build:
+#        context: .
+#      hostname: flower
+#      entrypoint: celery
+#      command: -A celery_tasks.app flower
+#      volumes:
+#        - ./backend:/bookabook/backend
+#      links:
+#        - redis
+#      depends_on:
+#        - redis
+#      ports:
+#        - '5555:5555'

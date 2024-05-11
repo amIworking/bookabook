@@ -46,7 +46,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     country = models.CharField(
             verbose_name="Country of Residence",
             max_length=255, null=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
 
     objects = UserManager()

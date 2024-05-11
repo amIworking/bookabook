@@ -1,25 +1,28 @@
-from django.http import HttpResponseRedirect
-from rest_framework import (generics, permissions,
-                            viewsets, status, mixins, response)
+
+from rest_framework import (permissions, viewsets)
+
 from rest_framework.decorators import action
+
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
 
 from apps.users.models import User
-from apps.users.serializers import (UserSerializerBase, UserCreateSerializer,
-                               UserChangeSerializer)
-from apps.users.permisions import IsOwnerOrAdminUser, AnyNotAllowed
-from apps.users.service import send_change_email, send_verify_email
 
+from apps.users.serializers import (UserSerializerBase,
+                                    UserCreateSerializer,
+                                    UserChangeSerializer)
+
+from apps.users.permisions import IsOwnerOrAdminUser
+
+from apps.users.tasks import send_verify_email, check_verify_email
 
 
 class UserView(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class_dict = \
-        {   'create': UserCreateSerializer,
+        {
+            'create': UserCreateSerializer,
             'list': UserSerializerBase,
             'retrieve': UserSerializerBase,
-            'confirm_email': UserCreateSerializer,
             'update': UserChangeSerializer,
             'partial_update': UserChangeSerializer,
             'destroy': UserChangeSerializer,
@@ -34,46 +37,24 @@ class UserView(viewsets.ModelViewSet):
             'destroy': (IsOwnerOrAdminUser,),
         }
 
-    # def create(self, request, *args, **kwargs):
-    #     #self.action = 'confirm_registration'
-    #     url = reverse(viewname='users-confirm-registration', request=request, *args,
-    #                   **kwargs)
-    #     print(request.auth, request.user)
-    #     print(response.__dict__)
-    #     return HttpResponseRedirect(redirect_to=url)
-    @action(name='confirm_registration',
-            methods=['get', 'post'],
-            detail=False)
-    def confirm_registration(self, request, *args, **kwargs):
-        print(self.kwargs, kwargs, request)
-        if request.method == 'teerre':
-            data = {'res': "Fill code"}
-        else:
-            print(request.data, *args, **kwargs)
-            if send_verify_email(data=request.data):
-                return super().create(request, *args, **kwargs)
-            else:
-                return {'res': 'confirm_code incorrect'}
-        return Response(data)
-    @action(name='change_password',
-            methods=['get', 'post'],
-            detail=False)
-    def change_password(self, request):
-        if request.method == 'GET':
-            data = {'res':"Fill your email"}
-        else:
-            data = send_change_email(request.data.get('email'))
-        return Response(data)
+    @action(name='verify_email', methods=['get'], detail=False)
+    def verify_email(self, **kwargs):
+        token = kwargs.get('token')
+        response_data = check_verify_email(token=token)
+        return Response(data=response_data['message'],
+                        status=response_data['status'],)
+
+    def create(self, request, *args, **kwargs):
+        create_response = super().create(request, *args, **kwargs)
+        send_verify_email.delay(data=create_response.data)
+        create_response.data['message'] = "we sent you an email to activate account"
+        return create_response
 
     def get_serializer_class(self):
         return self.serializer_class_dict.get(self.action)
+
     def get_permissions(self):
         permission_classes = (permissions.AllowAny, )
         if self.action in ('update', 'destroy', 'partial_update'):
             permission_classes = (IsOwnerOrAdminUser,)
         return (permission() for permission in permission_classes)
-
-
-
-
-
