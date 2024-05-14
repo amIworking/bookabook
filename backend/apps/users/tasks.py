@@ -2,27 +2,20 @@ from django.core.cache import cache
 
 from django.core.mail import send_mail
 
-from rest_framework.reverse import reverse
-
 from celery_tasks import app
 
-from apps.users.models import User
-
-from bookabook.settings import SERVER_EMAIL, DOMAIN_SITE
+from bookabook import settings
 
 from secrets import token_urlsafe
 
 
-def generate_token_urlsafe(length: int = 16):
-    return token_urlsafe(length)
-
-
 @app.task
-def send_verify_email(email):
-    domain = DOMAIN_SITE
-    token = generate_token_urlsafe()
+def send_verify_email(email: str) -> None:
+    domain = settings.DOMAIN_SITE
+    token = token_urlsafe(16)
     uri = f'/me/verify_email/{token}/'
-    cache.set(token, email, 300)
+    cache_life_time = settings.CACHE_LIFE_TIME
+    cache.set(token, email, cache_life_time)
     message = \
         (
             f"""
@@ -36,33 +29,5 @@ def send_verify_email(email):
         )
     send_mail(subject=f"Verify your email on {domain}",
               message=message, recipient_list=[email],
-              from_email=SERVER_EMAIL)
+              from_email=settings.SERVER_EMAIL)
 
-
-def check_verify_email(token):
-    email = cache.get(token)
-    user = User.objects.filter(email=email).first()
-    if user:
-        if user.is_active:
-            response_data = \
-                {
-                    "message": "Your account already has been activated",
-                    "status": 400
-                }
-        else:
-            user.is_active = True
-            user.save()
-            response_data = \
-                {
-                    "message": "Congrats, you successfully verified your email",
-                    "status": 200
-                }
-    else:
-        response_data = \
-            {
-                "message":
-                    "Your verify token got inspired "
-                    "or you're trying to send an invalid one",
-                "status": 400
-            }
-    return response_data

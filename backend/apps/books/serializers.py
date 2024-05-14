@@ -1,12 +1,12 @@
-import io
 
 from django.db import transaction
+
 from rest_framework import serializers
-from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
 
 from apps.users.models import User
+
 from apps.books.models import Book, Author, BookReview
+
 from django.utils.text import slugify
 
 
@@ -14,6 +14,7 @@ class AuthorSerializerBase(serializers.ModelSerializer):
     class Meta:
         model = Author
         exclude = ('time_create', 'time_update')
+
 
 class AuthorCreateSerializer(AuthorSerializerBase):
     class Meta:
@@ -25,6 +26,7 @@ class AuthorChangeSerializer(AuthorSerializerBase):
     class Meta:
         model = Author
         exclude = ('time_create', 'time_update', 'slug')
+
 
 class BookReviewSerializerBase(serializers.ModelSerializer):
     rating_review = serializers.IntegerField(max_value=5, min_value=1)
@@ -67,6 +69,7 @@ class BookReviewChangeSerializer(BookReviewSerializerBase):
 
 class BookSerializerBase(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
+
     class Meta:
         model = Book
         fields = ('id', 'title', 'slug',
@@ -78,8 +81,6 @@ class BookSerializerBase(serializers.ModelSerializer):
         else:
             rating = 0.0
         return rating
-
-
 
 
 class BookRetrieveSerializer(BookSerializerBase):
@@ -104,6 +105,3 @@ class BookChangeSerializer(BookSerializerBase):
     class Meta:
         model = Book
         exclude = ('time_create', 'time_update', 'slug')
-
-
-
