@@ -42,10 +42,10 @@ class UserChangeSerializer(serializers.ModelSerializer):
 
 
 class ActivateAccountSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False)
 
     def validate(self, attrs: dict) -> dict:
-        print(attrs)
-        email = self.initial_data.get('email')
+        email = attrs.get('email')
         if not email:
             raise serializers.ValidationError({'email': "Required field"})
         user = User.objects.filter(email=email).first()
@@ -58,14 +58,17 @@ class ActivateAccountSerializer(serializers.Serializer):
 
 
 class VerifyEmailSerializer(ActivateAccountSerializer):
+    token = serializers.CharField()
 
     def validate(self, attrs: dict) -> dict:
-        email = cache.get(self.initial_data['token'])
+        email = cache.get(attrs.get('token'))
         if not email:
             raise TokenIsInvalidOrGotInspired
-        self.initial_data['email'] = email
+        attrs['email'] = email
         attrs = super().validate(attrs)
-        user = User.objects.get(email=attrs['email'])
+        return attrs
+
+    def save(self, **kwargs):
+        user = User.objects.get(email=self.validated_data['email'])
         user.is_active = True
         user.save()
-        return attrs

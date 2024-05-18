@@ -17,7 +17,7 @@ from apps.users.serializers import (UserSerializerBase,
 
 from apps.users.permisions import IsOwnerOrAdminUser
 
-from apps.users.tasks import send_verify_email
+from apps.users.tasks import send_email_to_user
 
 
 class UserView(viewsets.ModelViewSet):
@@ -30,7 +30,8 @@ class UserView(viewsets.ModelViewSet):
             'update': UserChangeSerializer,
             'partial_update': UserChangeSerializer,
             'destroy': UserChangeSerializer,
-            'verify_email_again': UserSerializerBase,
+            'verify_email': VerifyEmailSerializer,
+            'verify_email_again': ActivateAccountSerializer,
         }
     permission_classes_dict = \
         {
@@ -40,21 +41,23 @@ class UserView(viewsets.ModelViewSet):
             'update': (IsOwnerOrAdminUser,),
             'partial_update': (IsOwnerOrAdminUser,),
             'destroy': (IsOwnerOrAdminUser,),
-            'verify_email_again': (permissions.AllowAny,)
+            'verify_email': (permissions.AllowAny,),
+            'verify_email_again': (permissions.AllowAny,),
         }
 
     @action(name='verify_email_again', methods=['post'], detail=False)
     def verify_email_again(self, request):
-        serializer = ActivateAccountSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        send_verify_email.delay(email=serializer.validated_data['email'])
+        send_email_to_user.delay(email=serializer.validated_data['email'])
         return Response(data={"message": "We sent you an email to activate account"},
                         status=200)
 
     @action(name='verify_email', methods=['get'], detail=False)
     def verify_email(self, request, **kwargs):
-        serializer = VerifyEmailSerializer(data=kwargs)
+        serializer = self.get_serializer(data=kwargs)
         serializer.is_valid(raise_exception=True)
+        serializer.save()
         return (
             Response(data={"message": "Congrats, you successfully verified your email"},
                      status=200)
@@ -62,8 +65,8 @@ class UserView(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         create_response = super().create(request, *args, **kwargs)
-        send_verify_email.delay(email=create_response.data['email'])
-        create_response.data['message'] = "We sent you an email to activate account"
+        send_email_to_user.delay(email=create_response.data['email'])
+        create_response.data['message'] = "We sent you an email to activate an account"
         return create_response
 
     def get_serializer_class(self):

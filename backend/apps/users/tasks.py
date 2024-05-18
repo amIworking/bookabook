@@ -1,3 +1,4 @@
+
 from django.core.cache import cache
 
 from django.core.mail import send_mail
@@ -8,26 +9,20 @@ from bookabook import settings
 
 from secrets import token_urlsafe
 
+from apps.users.logic.email_messages import email_messages
+
 
 @app.task
-def send_verify_email(email: str) -> None:
+def send_email_to_user(email: str,
+                       message_key: str = "verify_email") -> None:
     domain = settings.DOMAIN_SITE
     token = token_urlsafe(16)
-    uri = f'/me/verify_email/{token}/'
     cache_life_time = settings.CACHE_LIFE_TIME
     cache.set(token, email, cache_life_time)
-    message = \
-        (
-            f"""
-                You're receiving this email because you need to finish activation 
-                process on {domain}.
-
-                Please go to the following page to activate account:
-                http://{domain}{uri}
-
-             """
-        )
-    send_mail(subject=f"Verify your email on {domain}",
-              message=message, recipient_list=[email],
+    email_info = email_messages[message_key]
+    uri = eval(email_info['uri'])
+    subject = eval(email_info['subject'])
+    message = eval(email_info['message'])
+    send_mail(subject=subject, message=message,
+              recipient_list=[email],
               from_email=settings.SERVER_EMAIL)
-
