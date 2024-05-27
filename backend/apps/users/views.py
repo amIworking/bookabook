@@ -1,28 +1,79 @@
-from rest_framework import (generics, permissions,
-                            viewsets, status, mixins)
+
+from rest_framework import (permissions, viewsets)
+
+from rest_framework.decorators import action
+
+from rest_framework.response import Response
+
+from apps.books.permissions import AnyNotAllowed
 
 from apps.users.models import User
-from apps.users.serializers import (UserSerializerBase, UserCreateSerializer,
-                               UserChangeSerializer)
+
+from apps.users.serializers import (UserSerializerBase,
+                                    UserCreateSerializer,
+                                    UserChangeSerializer,
+                                    ActivateAccountSerializer,
+                                    VerifyEmailSerializer)
+
 from apps.users.permisions import IsOwnerOrAdminUser
+
+from apps.users.tasks import send_email_to_user
 
 
 class UserView(viewsets.ModelViewSet):
     queryset = User.objects.all()
+    serializer_class_dict = \
+        {
+            'create': UserCreateSerializer,
+            'list': UserSerializerBase,
+            'retrieve': UserSerializerBase,
+            'update': UserChangeSerializer,
+            'partial_update': UserChangeSerializer,
+            'destroy': UserChangeSerializer,
+            'verify_email': VerifyEmailSerializer,
+            'verify_email_again': ActivateAccountSerializer,
+        }
+    permission_classes_dict = \
+        {
+            'list': (permissions.AllowAny,),
+            'retrieve': (permissions.IsAdminUser,),
+            'create': (permissions.AllowAny,),
+            'update': (IsOwnerOrAdminUser,),
+            'partial_update': (IsOwnerOrAdminUser,),
+            'destroy': (IsOwnerOrAdminUser,),
+            'verify_email': (permissions.AllowAny,),
+            'verify_email_again': (permissions.AllowAny,),
+        }
+
+    @action(name='verify_email_again', methods=['post'], detail=False)
+    def verify_email_again(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        send_email_to_user.delay(email=serializer.validated_data['email'])
+        return Response(data={"message": "We sent you an email to activate account"},
+                        status=200)
+
+    @action(name='verify_email', methods=['get'], detail=False)
+    def verify_email(self, request, **kwargs):
+        serializer = self.get_serializer(data=kwargs)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return (
+            Response(data={"message": "Congrats, you successfully verified your email"},
+                     status=200)
+               )
+
+    def create(self, request, *args, **kwargs):
+        create_response = super().create(request, *args, **kwargs)
+        send_email_to_user.delay(email=create_response.data['email'])
+        create_response.data['message'] = "We sent you an email to activate an account"
+        return create_response
+
     def get_serializer_class(self):
-        serializer_class = UserSerializerBase
-        if self.action == 'create':
-            serializer_class = UserCreateSerializer
-        if self.action in ('update', 'destroy', 'partial_update'):
-            serializer_class = UserChangeSerializer
-        return serializer_class
+        return self.serializer_class_dict.get(self.action)
+
     def get_permissions(self):
-        permission_classes = (permissions.AllowAny, )
-        if self.action in ('update', 'destroy', 'partial_update'):
-            permission_classes = (IsOwnerOrAdminUser,)
-        return (permission() for permission in permission_classes)
-
-
-
-
-
+        all_permissions = self.permission_classes_dict.get(self.action)
+        if not all_permissions:
+            all_permissions = (AnyNotAllowed,)
+        return (permission() for permission in all_permissions)
